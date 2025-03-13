@@ -1,0 +1,191 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  users User[]
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  name         String
+  lastname     String
+  dni          String
+  email        String?
+  phone        String?
+  password     String
+  role         Role          @relation(fields: [roleId], references: [id])
+  roleId       Int
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  Account      Account[]
+  UserStock    UserStock[]
+  transactions Transaction[]
+  loans        Loan[]
+}
+
+model BankIdentity {
+  id        Int       @id @default(autoincrement())
+  name      String
+  avatar    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Account   Account[]
+  Stock     Stock[]
+}
+
+model AccountType {
+  id      Int       @id @default(autoincrement())
+  name    String
+  Account Account[]
+}
+
+model Account {
+  id             Int           @id @default(autoincrement())
+  number         String
+  balance        Float?
+  userId         Int?
+  user           User?         @relation(fields: [userId], references: [id])
+  bankIdentityId Int?
+  bankIdentity   BankIdentity? @relation(fields: [bankIdentityId], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  accountTypeId  Int
+  accountType    AccountType   @relation(fields: [accountTypeId], references: [id])
+  Transaction    Transaction[]
+  TransferFrom   Transfer[]    @relation(name: "fromAccount")
+  TransferTo     Transfer[]    @relation(name: "toAccount")
+}
+
+model TransactionType {
+  id          Int           @id @default(autoincrement())
+  name        String
+  Transaction Transaction[]
+}
+
+model LoanType {
+  id           Int    @id @default(autoincrement())
+  name         String
+  interestRate Float?
+  Loan         Loan[]
+}
+
+model Loan {
+  id               Int                   @id @default(autoincrement())
+  amount           Float
+  userId           Int
+  interestRate     Float
+  status           String
+  paid             Boolean               @default(false)
+  months           Int
+  user             User                  @relation(fields: [userId], references: [id])
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  loanTypeId       Int
+  loanType         LoanType              @relation(fields: [loanTypeId], references: [id])
+  payments         LoanPayment[]
+  interestPayments LoanInterestPayment[]
+  loanInstallments LoanInstallment[]
+}
+
+model LoanInstallment {
+  id                  Int                   @id @default(autoincrement())
+  payment             Float
+  interest            Float
+  paid                Boolean
+  loanId              Int?
+  loan                Loan?                 @relation(fields: [loanId], references: [id])
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  loanPayments        LoanPayment[]
+  LoanInterestPayment LoanInterestPayment[]
+  date                DateTime
+}
+
+model LoanPayment {
+  id            Int              @id @default(autoincrement())
+  amount        Float
+  loanId        Int?
+  loan          Loan?            @relation(fields: [loanId], references: [id])
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  installmentId Int?
+  installment   LoanInstallment? @relation(fields: [installmentId], references: [id])
+}
+
+model LoanInterestPayment {
+  id            Int              @id @default(autoincrement())
+  amount        Float
+  loanId        Int?
+  loan          Loan?            @relation(fields: [loanId], references: [id])
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  installmentId Int?
+  installment   LoanInstallment? @relation(fields: [installmentId], references: [id])
+}
+
+model Transaction {
+  id          Int             @id @default(autoincrement())
+  amount      Float
+  userId      Int?
+  user        User?           @relation(fields: [userId], references: [id])
+  accountId   Int?
+  account     Account?        @relation(fields: [accountId], references: [id])
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  typeId      Int
+  type        TransactionType @relation(fields: [typeId], references: [id])
+  description String
+}
+
+model Transfer {
+  id            Int      @id @default(autoincrement())
+  amount        Float
+  fromAccountId Int
+  fromAccount   Account  @relation(name: "fromAccount", fields: [fromAccountId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  description   String
+  toAccountId   Int
+  toAccount     Account  @relation(name: "toAccount", fields: [toAccountId], references: [id])
+}
+
+model Stock {
+  id             Int          @id @default(autoincrement())
+  name           String
+  price          Float
+  available      Int
+  total          Int
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  bankIdentityId Int
+  bankIdentity   BankIdentity @relation(fields: [bankIdentityId], references: [id])
+  UserStock      UserStock[]
+}
+
+//sotcks con usuarios
+
+model UserStock {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  stockId   Int?
+  stock     Stock?   @relation(fields: [stockId], references: [id])
+  quantity  Int
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
