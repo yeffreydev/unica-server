@@ -32,3 +32,23 @@ Restaura los datos (opcional) Si necesitas los datos de vuelta, edita el archivo
 psql -U <usuario> -d <base_de_datos> -f backup.sql
 
 ///
+
+para conectarse a sql la base de datos usar
+
+psql -U <user> -d <nombre_de_la_base_de_datos>
+
+para ver las tablas de la base de datos usar
+
+\dt
+
+para ver la estructura de una tabla usar
+
+\d <nombre_de_la_tabla>
+
+para salir de la consola de sql usar
+
+\q
+
+para mostrar las filas de una tabla usar
+
+SELECT \* FROM "<nombre_de_la_tabla>";

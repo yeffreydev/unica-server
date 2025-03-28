@@ -31,6 +31,7 @@ export class InstallmentsService {
       loan.loanType,
     ).map((installment) => ({
       ...installment,
+      loanId: loanId,
       paid: false, // or set the appropriate value
     }));
 
@@ -55,7 +56,7 @@ export class InstallmentsService {
         interestRate,
         status: 'PENDING',
         amount: Number(dataT.amount),
-        months: Number(dataT.months),
+        initalInstallments: Number(dataT.initalInstallments),
       },
       include: {
         user: true,

@@ -84,29 +84,34 @@ model LoanType {
 }
 
 model Loan {
-  id               Int                   @id @default(autoincrement())
-  amount           Float
-  userId           Int
-  interestRate     Float
-  status           String
-  paid             Boolean               @default(false)
-  months           Int
-  user             User                  @relation(fields: [userId], references: [id])
-  createdAt        DateTime              @default(now())
-  updatedAt        DateTime              @updatedAt
-  loanTypeId       Int
-  loanType         LoanType              @relation(fields: [loanTypeId], references: [id])
-  payments         LoanPayment[]
-  interestPayments LoanInterestPayment[]
-  loanInstallments LoanInstallment[]
+  id                 Int                   @id @default(autoincrement())
+  amount             Float //amount of loan
+  userId             Int //user relation id
+  interestRate       Float //interest reate of loan
+  status             String // status of loan
+  paid               Boolean               @default(false) //is is paid this loan
+  // months             Int //months of loan (now is initialInstallments)
+  paymentFrecuency   String                @default("monthly")
+  //inital of installments generated.
+  initalInstallments Int                   @map("months")
+  user               User                  @relation(fields: [userId], references: [id])
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  loanTypeId         Int
+  date               DateTime
+  loanType           LoanType              @relation(fields: [loanTypeId], references: [id])
+  payments           LoanPayment[]
+  interestPayments   LoanInterestPayment[]
+  loanInstallments   LoanInstallment[]
 }
 
 model LoanInstallment {
   id                  Int                   @id @default(autoincrement())
-  payment             Float
-  interest            Float
-  paid                Boolean
-  loanId              Int?
+  payment             Float //capital
+  interest            Float //interes
+  paid                Boolean               @default(false)
+  balance             Float?
+  loanId              Int
   loan                Loan?                 @relation(fields: [loanId], references: [id])
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt

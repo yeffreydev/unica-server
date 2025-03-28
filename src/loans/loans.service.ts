@@ -1,7 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { Loan, LoanType, Transaction, User } from '@prisma/client';
+import {
+  Loan,
+  LoanInstallment,
+  LoanType,
+  Transaction,
+  User,
+} from '@prisma/client';
 import { PrismaService } from 'prisma/prisma.service';
-import { TransactionTypes } from 'src/constants';
+import { LoanInterestTypes, TransactionTypes } from 'src/constants';
+import { calculateInstallments } from './loans.utils';
+
 @Injectable()
 export class LoanTransactionService {
   constructor(private prisma: PrismaService) {}
@@ -13,20 +21,68 @@ export class LoanTransactionService {
       },
     });
   }
+
+  async getLoanInstallments(loanId: string): Promise<LoanInstallment[]> {
+    return this.prisma.loanInstallment.findMany({
+      where: {
+        loanId: Number(loanId),
+      },
+    });
+  }
+
   async createLoanTransaction(dataT: Loan): Promise<Loan> {
-    let interestRate = 0;
-    return this.prisma.loan.create({
+    //create the loan.
+    // create the installments
+    // assign the installments to the loan
+    let interestRate = Number(dataT.interestRate);
+
+    const { loanTypeId } = dataT;
+
+    const loanType = await this.prisma.loanType.findUnique({
+      where: {
+        id: loanTypeId,
+      },
+    });
+    console.log(loanType);
+    // let installmentsprev = calculateInstallments(
+    //   loanType.name as keyof typeof LoanInterestTypes,
+    //   2,
+    //   dataT.amount,
+    //   dataT.interestRate,
+    //   dataT.initalInstallments,
+    //   dataT.date,
+    // );
+    // console.log(installmentsprev);
+    //{ amount: '500', userId: 18, months: 0 } 20,
+
+    const loan = await this.prisma.loan.create({
       data: {
         ...dataT,
         interestRate,
         status: 'PENDING',
         amount: Number(dataT.amount),
-        months: Number(dataT.months),
+        initalInstallments: Number(dataT.initalInstallments),
       },
       include: {
         user: true,
       },
     });
+
+    let installments = calculateInstallments(
+      loanType.name as keyof typeof LoanInterestTypes,
+      loan.id,
+      loan.amount,
+      loan.interestRate,
+      loan.initalInstallments,
+      loan.date,
+    );
+
+    console.log(installments);
+
+    const createdInstallments = await this.prisma.loanInstallment.createMany({
+      data: installments,
+    });
+    return loan;
   }
   async getUsersWithLoans(): Promise<any> {
     const userWithLoans = await this.prisma.user.findMany({

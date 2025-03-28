@@ -7,15 +7,8 @@ export enum TransactionTypes {
 }
 
 export enum LoanInterestTypes {
-  SIMPLE = 'SIMPLE',
-  COMPOUND = 'COMPOUND',
-  FIXED = 'FIXED',
-  VARIABLE = 'VARIABLE',
-  ORDINARY = 'ORDINARY',
-  LATE_PAYMENT = 'LATE_PAYMENT',
-  NOMINAL = 'NOMINAL',
-  EFFECTIVE = 'EFFECTIVE',
-  BANK = 'BANK',
-  LEGAL = 'LEGAL',
-  USURIOUS = 'USURIOUS',
+  FIXED = 'FIXED', //couta fija
+  VARIABLE = 'VARIABLE', // couta al rebatir.
+  REBATE = 'REBATE', // couta variable.
+  MATURITY = 'MATURITY', // cuota al vencimiento.
 }

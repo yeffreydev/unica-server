@@ -12,10 +12,10 @@ export const calculalteScheduleInstallments = (
 };
 
 export const calculateFixedInstallments = (loan: Loan): IInstallment[] => {
-  const payment = loan.amount / loan.months;
+  const payment = loan.amount / loan.initalInstallments;
   const interest = loan.amount * loan.interestRate;
   const installments: IInstallment[] = [];
-  for (let i = 0; i < loan.months; i++) {
+  for (let i = 0; i < loan.initalInstallments; i++) {
     installments.push({
       payment: payment,
       interest: interest,

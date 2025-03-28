@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { LoanTransactionService } from './loans.service';
 import { Loan } from '@prisma/client';
 
@@ -10,6 +10,12 @@ export class LoanTransactionController {
   async getAllLoanTransactions() {
     return this.TransactionService.getAllLoanTransactions();
   }
+
+  @Get(':id/installments')
+  async getLoanInstallments(@Param('id') id: string) {
+    return this.TransactionService.getLoanInstallments(id);
+  }
+
   @Post()
   async createLoanTransaction(@Body() data: Loan) {
     return this.TransactionService.createLoanTransaction(data);
