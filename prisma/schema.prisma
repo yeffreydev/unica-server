@@ -20,31 +20,34 @@ model Role {
 }
 
 model User {
-  id           Int           @id @default(autoincrement())
-  name         String
-  lastname     String
-  dni          String
-  email        String?
-  phone        String?
-  password     String
-  role         Role          @relation(fields: [roleId], references: [id])
-  roleId       Int
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  Account      Account[]
-  UserStock    UserStock[]
-  transactions Transaction[]
-  loans        Loan[]
+  id                      Int                       @id @default(autoincrement())
+  name                    String
+  lastname                String
+  dni                     String
+  email                   String?
+  phone                   String?
+  password                String
+  role                    Role                      @relation(fields: [roleId], references: [id])
+  roleId                  Int
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  Account                 Account[]
+  UserStock               UserStock[]
+  transactions            Transaction[]
+  loans                   Loan[]
+  SocialFundsTransactions SocialFundsTransactions[]
 }
 
 model BankIdentity {
-  id        Int       @id @default(autoincrement())
-  name      String
-  avatar    String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  Account   Account[]
-  Stock     Stock[]
+  id                      Int                       @id @default(autoincrement())
+  name                    String
+  avatar                  String
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  Account                 Account[]
+  Stock                   Stock[]
+  SocialFunds             SocialFunds[]
+  SocialFundsTransactions SocialFundsTransactions[]
 }
 
 model AccountType {
@@ -184,13 +187,42 @@ model Stock {
 //sotcks con usuarios
 
 model UserStock {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  stockId   Int?
-  stock     Stock?   @relation(fields: [stockId], references: [id])
-  quantity  Int
-  price     Float
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                        Int                      @id @default(autoincrement())
+  userId                    Int
+  user                      User                     @relation(fields: [userId], references: [id])
+  stockId                   Int?
+  stock                     Stock?                   @relation(fields: [stockId], references: [id])
+  quantity                  Int
+  price                     Float
+  createdAt                 DateTime                 @default(now())
+  updatedAt                 DateTime                 @updatedAt
+  SocialFundsTransactions   SocialFundsTransactions? @relation(fields: [socialFundsTransactionsId], references: [id])
+  socialFundsTransactionsId Int?
+}
+
+model SocialFunds {
+  id                      Int                       @id @default(autoincrement())
+  name                    String
+  description             String
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  bankIdentityId          Int
+  bankIdentity            BankIdentity              @relation(fields: [bankIdentityId], references: [id])
+  SocialFundsTransactions SocialFundsTransactions[]
+}
+
+model SocialFundsTransactions {
+  id             Int          @id @default(autoincrement())
+  socialFundsId  Int
+  userId         Int
+  user           User         @relation(fields: [userId], references: [id])
+  amount         Float
+  description    String
+  socialFunds    SocialFunds  @relation(fields: [socialFundsId], references: [id])
+  createdAt      DateTime     @default(now())
+  date           DateTime
+  updatedAt      DateTime     @updatedAt
+  bankIdentityId Int
+  bankIdentity   BankIdentity @relation(fields: [bankIdentityId], references: [id])
+  UserStock      UserStock[]
 }
