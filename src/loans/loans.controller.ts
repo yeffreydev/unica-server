@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { LoanTransactionService } from './loans.service';
 import { Loan } from '@prisma/client';
 
@@ -11,9 +11,14 @@ export class LoanTransactionController {
     return this.TransactionService.getAllLoanTransactions();
   }
 
-  @Get(':id/installments')
+  @Get('installments/:id')
   async getLoanInstallments(@Param('id') id: string) {
     return this.TransactionService.getLoanInstallments(id);
+  }
+
+  @Get('month/installments')
+  async getCurrentMonthInstallments() {
+    return this.TransactionService.getCurrentMontInstallments();
   }
 
   @Post()
@@ -29,5 +34,10 @@ export class LoanTransactionController {
   @Get('types')
   async getLoanTypes() {
     return this.TransactionService.getLoanTypes();
+  }
+
+  @Delete(':id')
+  async deleteLoanTransaction(@Param('id') id: string) {
+    return this.TransactionService.deleteLoanTransaction(id);
   }
 }

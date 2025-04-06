@@ -46,7 +46,6 @@ model BankIdentity {
   updatedAt               DateTime                  @updatedAt
   Account                 Account[]
   Stock                   Stock[]
-  SocialFunds             SocialFunds[]
   SocialFundsTransactions SocialFundsTransactions[]
 }
 
@@ -187,42 +186,36 @@ model Stock {
 //sotcks con usuarios
 
 model UserStock {
-  id                        Int                      @id @default(autoincrement())
-  userId                    Int
-  user                      User                     @relation(fields: [userId], references: [id])
-  stockId                   Int?
-  stock                     Stock?                   @relation(fields: [stockId], references: [id])
-  quantity                  Int
-  price                     Float
-  createdAt                 DateTime                 @default(now())
-  updatedAt                 DateTime                 @updatedAt
-  SocialFundsTransactions   SocialFundsTransactions? @relation(fields: [socialFundsTransactionsId], references: [id])
-  socialFundsTransactionsId Int?
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  stockId   Int?
+  stock     Stock?   @relation(fields: [stockId], references: [id])
+  quantity  Int
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model SocialFunds {
   id                      Int                       @id @default(autoincrement())
   name                    String
-  description             String
   createdAt               DateTime                  @default(now())
   updatedAt               DateTime                  @updatedAt
-  bankIdentityId          Int
-  bankIdentity            BankIdentity              @relation(fields: [bankIdentityId], references: [id])
   SocialFundsTransactions SocialFundsTransactions[]
 }
 
 model SocialFundsTransactions {
-  id             Int          @id @default(autoincrement())
+  id             Int           @id @default(autoincrement())
   socialFundsId  Int
-  userId         Int
-  user           User         @relation(fields: [userId], references: [id])
+  userId         Int?
+  user           User?         @relation(fields: [userId], references: [id])
   amount         Float
   description    String
-  socialFunds    SocialFunds  @relation(fields: [socialFundsId], references: [id])
-  createdAt      DateTime     @default(now())
+  socialFunds    SocialFunds   @relation(fields: [socialFundsId], references: [id])
+  createdAt      DateTime      @default(now())
   date           DateTime
-  updatedAt      DateTime     @updatedAt
-  bankIdentityId Int
-  bankIdentity   BankIdentity @relation(fields: [bankIdentityId], references: [id])
-  UserStock      UserStock[]
+  updatedAt      DateTime      @updatedAt
+  BankIdentity   BankIdentity? @relation(fields: [bankIdentityId], references: [id])
+  bankIdentityId Int?
 }

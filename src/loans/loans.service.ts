@@ -126,4 +126,44 @@ export class LoanTransactionService {
   async getLoanTypes(): Promise<LoanType[]> {
     return this.prisma.loanType.findMany();
   }
+
+  async getCurrentMontInstallments(): Promise<
+    (LoanInstallment & { user: User })[]
+  > {
+    const installments = await this.prisma.loanInstallment.findMany({
+      where: {
+        date: {
+          gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+          lte: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
+        },
+      },
+      include: {
+        loan: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    });
+
+    return installments.map((installment) => ({
+      ...installment,
+      user: installment.loan.user,
+    }));
+  }
+  async deleteLoanTransaction(id: string): Promise<Loan> {
+    // First, delete the installments associated with the loan
+    await this.prisma.loanInstallment.deleteMany({
+      where: {
+        loanId: Number(id),
+      },
+    });
+
+    // Then, delete the loan itself
+    return this.prisma.loan.delete({
+      where: {
+        id: Number(id),
+      },
+    });
+  }
 }

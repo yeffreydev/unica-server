@@ -6,6 +6,7 @@ import { StockModule } from './stocks/stocks.module';
 import { TransactionModule } from './transactions/transactions.module';
 import { LoanTransactionModule } from './loans/loans.module';
 import { UploadModule } from './upload/upload.module';
+import { SocialFundsModule } from './socialFunds/socialFunds.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { UploadModule } from './upload/upload.module';
     TransactionModule,
     LoanTransactionModule,
     UploadModule, //para subir archivos
+    SocialFundsModule,
   ],
   controllers: [],
   providers: [],

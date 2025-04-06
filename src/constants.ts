@@ -12,3 +12,8 @@ export enum LoanInterestTypes {
   REBATE = 'REBATE', // couta variable.
   MATURITY = 'MATURITY', // cuota al vencimiento.
 }
+
+export enum SocialFundsTypes {
+  LEGAL = 'LEGAL', // fondo legal
+  SOCIAL = 'SOCIAL', // fondo social
+}

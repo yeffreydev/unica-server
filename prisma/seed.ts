@@ -1,7 +1,11 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
-import { LoanInterestTypes, TransactionTypes } from 'src/constants';
+import {
+  LoanInterestTypes,
+  SocialFundsTypes,
+  TransactionTypes,
+} from 'src/constants';
 
 export async function seed() {
   //seed bank identity
@@ -132,6 +136,24 @@ export async function seed() {
       console.log(`Loan type ${type} created.`);
     } else {
       console.log(`Loan type ${type} already exists
+      `);
+    }
+  }
+
+  //seed data for social funds
+  const socialFundsTypes = Object.keys(SocialFundsTypes);
+
+  for (const type of socialFundsTypes) {
+    const existingSocialFund = await prisma.socialFunds.findFirst({
+      where: { name: type },
+    });
+    if (!existingSocialFund) {
+      await prisma.socialFunds.create({
+        data: { name: type },
+      });
+      console.log(`Social Fund ${type} created.`);
+    } else {
+      console.log(`Social Fund ${type} already exists
       `);
     }
   }
