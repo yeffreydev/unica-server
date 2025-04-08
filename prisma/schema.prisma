@@ -36,6 +36,7 @@ model User {
   transactions            Transaction[]
   loans                   Loan[]
   SocialFundsTransactions SocialFundsTransactions[]
+  Incomes                 Incomes[]
 }
 
 model BankIdentity {
@@ -218,4 +219,24 @@ model SocialFundsTransactions {
   updatedAt      DateTime      @updatedAt
   BankIdentity   BankIdentity? @relation(fields: [bankIdentityId], references: [id])
   bankIdentityId Int?
+}
+
+model IncomesType {
+  id      Int       @id @default(autoincrement())
+  name    String
+  Incomes Incomes[]
+}
+
+// incomes transactions 
+model Incomes {
+  id          Int         @id @default(autoincrement())
+  amount      Float
+  description String
+  date        DateTime
+  userId      Int?
+  user        User?       @relation(fields: [userId], references: [id])
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  typeId      Int
+  type        IncomesType @relation(fields: [typeId], references: [id])
 }

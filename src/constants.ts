@@ -17,3 +17,7 @@ export enum SocialFundsTypes {
   LEGAL = 'LEGAL', // fondo legal
   SOCIAL = 'SOCIAL', // fondo social
 }
+
+export enum IncomeTypes {
+  OTHER = 'OTHER', // otro
+}
