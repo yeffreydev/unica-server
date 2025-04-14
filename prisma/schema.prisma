@@ -37,6 +37,13 @@ model User {
   loans                   Loan[]
   SocialFundsTransactions SocialFundsTransactions[]
   Incomes                 Incomes[]
+  Withdrawals             Withdrawals[]
+  DepositorPayouts        DepositorPayouts[]
+  AdministrativeExpenses  AdministrativeExpenses[]
+  Dividends               Dividends[]
+  SocialFundsExpenses     SocialFundsExpenses[]
+  Expenses                Expenses[]
+  FormSubmission          FormSubmission[]
 }
 
 model BankIdentity {
@@ -48,6 +55,7 @@ model BankIdentity {
   Account                 Account[]
   Stock                   Stock[]
   SocialFundsTransactions SocialFundsTransactions[]
+  SocialFundsExpenses     SocialFundsExpenses[]
 }
 
 model AccountType {
@@ -204,9 +212,25 @@ model SocialFunds {
   createdAt               DateTime                  @default(now())
   updatedAt               DateTime                  @updatedAt
   SocialFundsTransactions SocialFundsTransactions[]
+  SocialFundsExpenses     SocialFundsExpenses[]
 }
 
 model SocialFundsTransactions {
+  id             Int           @id @default(autoincrement())
+  socialFundsId  Int
+  userId         Int?
+  user           User?         @relation(fields: [userId], references: [id])
+  amount         Float
+  description    String
+  socialFunds    SocialFunds   @relation(fields: [socialFundsId], references: [id])
+  createdAt      DateTime      @default(now())
+  date           DateTime
+  updatedAt      DateTime      @updatedAt
+  BankIdentity   BankIdentity? @relation(fields: [bankIdentityId], references: [id])
+  bankIdentityId Int?
+}
+
+model SocialFundsExpenses {
   id             Int           @id @default(autoincrement())
   socialFundsId  Int
   userId         Int?
@@ -239,4 +263,131 @@ model Incomes {
   updatedAt   DateTime    @updatedAt
   typeId      Int
   type        IncomesType @relation(fields: [typeId], references: [id])
+}
+
+//model withdrawals 
+
+model Withdrawals {
+  id          Int      @id @default(autoincrement())
+  amount      Float
+  description String
+  date        DateTime
+  userId      Int?
+  user        User?    @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+//model depositos payout
+
+model DepositorPayouts {
+  id          Int      @id @default(autoincrement())
+  amount      Float
+  description String
+  date        DateTime
+  userId      Int?
+  user        User?    @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+//model AdministrativeExpenses
+model AdministrativeExpenses {
+  id          Int      @id @default(autoincrement())
+  amount      Float
+  description String
+  date        DateTime
+  userId      Int?
+  user        User?    @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+//modelo para dividendos
+
+model Dividends {
+  id          Int      @id @default(autoincrement())
+  amount      Float
+  description String
+  date        DateTime
+  userId      Int?
+  user        User?    @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ExpensesType {
+  id       Int        @id @default(autoincrement())
+  name     String
+  Expenses Expenses[]
+}
+
+// incomes transactions 
+model Expenses {
+  id          Int          @id @default(autoincrement())
+  amount      Float
+  description String
+  date        DateTime
+  userId      Int?
+  user        User?        @relation(fields: [userId], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  typeId      Int
+  type        ExpensesType @relation(fields: [typeId], references: [id])
+}
+
+model Form {
+  id             Int              @id @default(autoincrement())
+  title          String
+  description    String?
+  key            String?
+  status         String           @default("draft") // e.g., "draft", "published", "archived"
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  fields         Field[]
+  FormSubmission FormSubmission[]
+}
+
+model Field {
+  id            Int         @id @default(autoincrement())
+  formId        Int
+  form          Form        @relation(fields: [formId], references: [id], onDelete: Cascade)
+  label         String
+  type          String // e.g., "text", "number", "email", "date", "select", "checkbox", "radio", "textarea"
+  required      Boolean     @default(false)
+  placeholder   String? // Optional placeholder text
+  options       String[] // Array of options for select, checkbox, or radio fields
+  minLength     Int? // For text/textarea validation
+  maxLength     Int? // For text/textarea validation
+  minValue      Float? // For number/date validation
+  maxValue      Float? // For number/date validation
+  pattern       String? // Regex pattern for validation (e.g., email format)
+  order         Int         @default(0) // For controlling field display order
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  FormFielValue FielValue[]
+}
+
+model FormSubmission {
+  id        Int         @id @default(autoincrement())
+  formId    Int
+  form      Form        @relation(fields: [formId], references: [id], onDelete: Cascade)
+  userId    Int?
+  user      User?       @relation(fields: [userId], references: [id])
+  data      Json? // Store the submitted data as JSON
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  values    FielValue[]
+}
+
+model FielValue {
+  id               Int            @id @default(autoincrement())
+  formSubmissionId Int
+  formSubmission   FormSubmission @relation(fields: [formSubmissionId], references: [id], onDelete: Cascade)
+  fieldId          Int
+  field            Field          @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  value            String? // Single value for single-input fields
+  values           String[] // Array for multiple values (e.g., checkboxes, multi-select)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 }

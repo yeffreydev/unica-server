@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 import {
+  ExpensesTypes,
   IncomeTypes,
   LoanInterestTypes,
   SocialFundsTypes,
@@ -177,4 +178,25 @@ export async function seed() {
       `);
     }
   }
+
+  //seed data for income types
+
+  const expenseTypes = Object.keys(ExpensesTypes);
+
+  for (const type of expenseTypes) {
+    const existingExpenseType = await prisma.expensesType.findFirst({
+      where: { name: type },
+    });
+    if (!existingExpenseType) {
+      await prisma.expensesType.create({
+        data: { name: type },
+      });
+      console.log(`Expense Type Fund ${type} created.`);
+    } else {
+      console.log(`Expense Type Fund ${type} already exists
+      `);
+    }
+  }
+
+  //run scripts on startup
 }

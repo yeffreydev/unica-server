@@ -21,3 +21,7 @@ export enum SocialFundsTypes {
 export enum IncomeTypes {
   OTHER = 'OTHER', // otro
 }
+
+export enum ExpensesTypes {
+  OTHER = 'OTHER', // otro
+}

@@ -11,10 +11,10 @@ import {
 } from '@nestjs/common';
 import { StockService } from './stocks.service';
 import { Stock, UserStock } from '@prisma/client';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { RolesGuard } from 'src/auth/roles.guard';
-import { Role } from 'src/auth/role.enum';
-import { Roles } from 'src/auth/roles.decorator';
+import { JwtAuthGuard } from 'src/app/auth/jwt-auth.guard';
+import { RolesGuard } from 'src/app/auth/roles.guard';
+import { Role } from 'src/app/auth/role.enum';
+import { Roles } from 'src/app/auth/roles.decorator';
 
 @Controller('stocks')
 export class StockController {

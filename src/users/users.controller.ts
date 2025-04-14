@@ -12,10 +12,10 @@ import {
 } from '@nestjs/common';
 import { UserService } from './users.service';
 import { User } from '@prisma/client';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { Roles } from 'src/auth/roles.decorator';
-import { Role } from 'src/auth/role.enum';
-import { RolesGuard } from 'src/auth/roles.guard';
+import { JwtAuthGuard } from 'src/app/auth/jwt-auth.guard';
+import { Roles } from 'src/app/auth/roles.decorator';
+import { Role } from 'src/app/auth/role.enum';
+import { RolesGuard } from 'src/app/auth/roles.guard';
 
 @Controller('Users')
 export class UserController {

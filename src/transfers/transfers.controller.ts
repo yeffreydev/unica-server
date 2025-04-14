@@ -11,10 +11,10 @@ import {
 } from '@nestjs/common';
 import { TransferService } from './transfers.service';
 import { Transfer } from '@prisma/client';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { RolesGuard } from 'src/auth/roles.guard';
-import { Roles } from 'src/auth/roles.decorator';
-import { Role } from 'src/auth/role.enum';
+import { JwtAuthGuard } from 'src/app/auth/jwt-auth.guard';
+import { RolesGuard } from 'src/app/auth/roles.guard';
+import { Roles } from 'src/app/auth/roles.decorator';
+import { Role } from 'src/app/auth/role.enum';
 
 @Controller('Transfers')
 export class TransferController {
