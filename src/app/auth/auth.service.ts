@@ -33,14 +33,47 @@ export class AuthService {
     });
   }
 
-  async login(user: any): Promise<{ access_token: string }> {
+  async login(
+    user: any,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     const role = await this.prisma.role.findUnique({
       where: { id: user.roleId },
     });
     const payload = { sub: user.id, roles: [role.name] };
 
     return {
-      access_token: this.jwtService.sign(payload),
+      accessToken: this.jwtService.sign(payload, {
+        expiresIn: '30m',
+      }),
+      refreshToken: this.jwtService.sign(payload, {
+        expiresIn: '7d',
+      }),
+    };
+  }
+
+  async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
+    const payload = this.jwtService.verify(refreshToken);
+    if (!payload) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    const role = await this.prisma.role.findUnique({
+      where: { id: user.roleId },
+    });
+    return {
+      accessToken: this.jwtService.sign(
+        { sub: user.id, roles: [role.name] },
+        {
+          expiresIn: '30m',
+        },
+      ),
     };
   }
 }

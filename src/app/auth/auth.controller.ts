@@ -29,4 +29,13 @@ export class AuthController {
       throw new UnauthorizedException('Invalid credentials');
     }
   }
+
+  @Post('refresh-token')
+  async refreshToken(@Body('refreshToken') refreshToken: string) {
+    try {
+      return this.authService.refreshToken(refreshToken);
+    } catch (error) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+  }
 }

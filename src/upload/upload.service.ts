@@ -1,27 +1,28 @@
+// file-upload.service.ts
 import { Injectable } from '@nestjs/common';
-import { BankIdentity, Stock } from '@prisma/client';
-import { PrismaService } from 'prisma/prisma.service';
-@Injectable()
-export class FilesService {
-  constructor(private prisma: PrismaService) {}
+import * as fs from 'fs';
 
-  async postPhoto(): Promise<{ bank: BankIdentity; mainStock: Stock }> {
-    const bank = await this.prisma.bankIdentity.findFirst();
-    const mainStock = await this.prisma.stock.findFirst();
+@Injectable()
+export class UploadService {
+  handleFileUpload(file: Express.Multer.File) {
+    if (!file) {
+      throw new Error('No file uploaded');
+    }
     return {
-      bank,
-      mainStock,
+      filename: file.filename,
+      path: file.path,
+      size: file.size,
     };
   }
-  async saveLogo(file: File, folder: string): Promise<string> {
-    //upload to aws s3
-    return 'url';
-  }
-  async saveFiles(files: File[], folder: string): Promise<string[]> {
-    const saveFiles = [];
-    for (const file of files) {
-      //upload to aws s3
+
+  removeFile(filePath: string): boolean {
+    try {
+      fs.unlinkSync(filePath);
+      console.log('File deleted successfully');
+      return true;
+    } catch (err) {
+      console.error('Error deleting file:', err);
+      return false;
     }
-    return saveFiles;
   }
 }

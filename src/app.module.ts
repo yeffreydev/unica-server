@@ -15,6 +15,7 @@ import { DividendsModule } from './expenses/dividends/dividends.module';
 import { SocialFundsExpensesModule } from './expenses/socialFunds/socialFunds.module';
 import { OtherExpensesModule } from './expenses/others/others.module';
 import { FormsModule } from './app/forms/forms.module';
+import { FilesModule } from './files/files.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { FormsModule } from './app/forms/forms.module';
     SocialFundsExpensesModule,
     OtherExpensesModule,
     FormsModule,
+    FilesModule,
   ],
   controllers: [],
   providers: [],
