@@ -44,6 +44,7 @@ model User {
   SocialFundsExpenses     SocialFundsExpenses[]
   Expenses                Expenses[]
   FormSubmission          FormSubmission[]
+  EventParticipants       EventParticipants[]
 }
 
 model BankIdentity {
@@ -122,6 +123,7 @@ model LoanInstallment {
   interest            Float //interes
   paid                Boolean               @default(false)
   balance             Float?
+  installment_number  Int?
   loanId              Int
   loan                Loan?                 @relation(fields: [loanId], references: [id])
   createdAt           DateTime              @default(now())
@@ -390,4 +392,46 @@ model FielValue {
   values           String[] // Array for multiple values (e.g., checkboxes, multi-select)
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
+}
+
+//Events
+model Event {
+  id                  Int                 @id @default(autoincrement())
+  title               String
+  description         String
+  start_date          DateTime
+  start_time          DateTime
+  end_time            DateTime
+  recurrence_type     String //'none', 'weekly', 'monthly', 'custom'
+  recurrence_interval Int
+  custom_dates        DateTime[] // para fechas personalizadas
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  EventParticipants   EventParticipants[]
+  EventWeekly         EventWeekly[]
+}
+
+model EventWeekly {
+  id          Int      @id @default(autoincrement())
+  event_id    Int
+  event       Event?   @relation(fields: [event_id], references: [id])
+  day_of_week Int // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model EventParticipants {
+  id Int @id @default(autoincrement())
+
+  event_id       Int
+  event          Event? @relation(fields: [event_id], references: [id])
+  participant_id Int
+  participan     User?  @relation(fields: [participant_id], references: [id])
+
+  participant_type String? //(50) NOT NULL -- e.g., 'User', 'Group'
+  //with roles participant_type (multiple roles)
+  participant_role String[] //(50) NOT NULL -- e.g., 'Admin', 'Member'
+  //with roles participant_role (multiple roles)
+  status           String? //(50) NOT NULL -- e.g., 'Accepted', 'Declined', 'Tentative'
+  createdAt        DateTime @default(now())
 }

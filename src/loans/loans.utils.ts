@@ -19,6 +19,7 @@ function calculateFixedInstallments(
     date.setMonth(date.getMonth() + i);
     installmentsArray.push({
       id: undefined,
+      installment_number: i,
       payment: installmentAmount,
       interest,
       balance: remainingBalance,
@@ -48,7 +49,7 @@ function calculateVariableInstallments(
     const interest = remainingBalance * interestRate;
     const date = new Date(startDate);
     remainingBalance -= installmentAmount;
-    date.setMonth(date.getMonth() + i);
+    date.setMonth(date.getMonth() + i + 1);
     installmentsArray.push({
       id: undefined,
       loanId,
@@ -57,6 +58,7 @@ function calculateVariableInstallments(
       balance: remainingBalance,
       date,
       paid: false,
+      installment_number: i,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -91,6 +93,7 @@ function calculateRebateInstallments(
       loanId,
       createdAt: new Date(),
       updatedAt: new Date(),
+      installment_number: i,
     });
   }
 
@@ -120,6 +123,7 @@ function calculateMaturityInstallments(
         balance: 0,
         date,
         paid: false,
+        installment_number: i,
         loanId,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -135,6 +139,7 @@ function calculateMaturityInstallments(
         loanId,
         createdAt: new Date(),
         updatedAt: new Date(),
+        installment_number: i,
       });
     }
   }

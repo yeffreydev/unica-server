@@ -1,11 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  Loan,
-  LoanInstallment,
-  LoanType,
-  Transaction,
-  User,
-} from '@prisma/client';
+import { Loan, LoanInstallment, LoanType, User } from '@prisma/client';
 import { PrismaService } from 'prisma/prisma.service';
 import { LoanInterestTypes, TransactionTypes } from 'src/constants';
 import { calculateInstallments } from './loans.utils';
@@ -18,6 +12,7 @@ export class LoanTransactionService {
     return this.prisma.loan.findMany({
       include: {
         user: true,
+        loanType: true,
       },
     });
   }
@@ -152,6 +147,15 @@ export class LoanTransactionService {
     }));
   }
   async deleteLoanTransaction(id: string): Promise<Loan> {
+    const findLoand = await this.prisma.loan.findUnique({
+      where: {
+        id: Number(id),
+      },
+    });
+
+    if (!findLoand) {
+      throw new Error('Loan not found');
+    }
     // First, delete the installments associated with the loan
     await this.prisma.loanInstallment.deleteMany({
       where: {
@@ -165,5 +169,200 @@ export class LoanTransactionService {
         id: Number(id),
       },
     });
+  }
+
+  //obtener los prestamos por usuario y sus cuotas
+  async getLoansWithNextInstallmentByUserId(userId: string): Promise<any[]> {
+    const loans = await this.prisma.loan.findMany({
+      where: {
+        userId: Number(userId),
+      },
+      include: {
+        loanInstallments: {
+          where: {
+            paid: false,
+          },
+          orderBy: {
+            date: 'asc',
+          },
+          take: 1,
+        },
+        loanType: true,
+      },
+    });
+
+    return loans;
+  }
+
+  async updateLoanTransaction(id: string, data: Loan): Promise<Loan> {
+    const findLoan = await this.prisma.loan.findUnique({
+      where: {
+        id: Number(id),
+      },
+      include: {
+        loanInstallments: true,
+        loanType: true,
+      },
+    });
+
+    if (!findLoan) {
+      throw new Error('Loan not found');
+    }
+
+    const updatedLoan = await this.prisma.loan.update({
+      where: {
+        id: Number(id),
+      },
+      data,
+    });
+
+    // If the date is updated, adjust the dates of the installments
+    if (data.date && data.date !== findLoan.date) {
+      const newInstallmentDates = calculateInstallments(
+        findLoan.loanType.name as keyof typeof LoanInterestTypes,
+        findLoan.id,
+        findLoan.amount,
+        findLoan.interestRate,
+        findLoan.initalInstallments,
+        data.date,
+      );
+
+      await this.prisma.loanInstallment.deleteMany({
+        where: {
+          loanId: Number(id),
+        },
+      });
+
+      await this.prisma.loanInstallment.createMany({
+        data: newInstallmentDates,
+      });
+    }
+
+    return updatedLoan;
+  }
+
+  async payLoan(
+    loanId: string,
+    data: { paymentAmount: number; date: Date; interestAmount: number },
+  ): Promise<LoanInstallment> {
+    //check if the loan exists - [x]
+    // x - Check if the amount is valida and not greater than the installment.
+    // get the next unpaid installment
+    // save the payment
+    // update the installment with the payment
+    // update the loan status if all installments are paid
+    // update the installment status to paid
+    // if the amount is difernt to installment amount, create a new installments with the rest of the amount.
+
+    //check if the loan exists - [x]
+
+    const loan = await this.prisma.loan.findUnique({
+      where: {
+        id: Number(loanId),
+      },
+      include: {
+        loanInstallments: true,
+      },
+    });
+
+    if (!loan) {
+      throw new Error('Loan not found');
+    }
+
+    // x - Check if the amount is valida and not greater than the installment.
+
+    // get the next unpaid installment
+    const nextInstallment = loan.loanInstallments.find(
+      (installment) => !installment.paid,
+    );
+
+    // save the payment
+    const payment = await this.prisma.loanPayment.create({
+      data: {
+        amount: data.paymentAmount,
+        loanId: Number(loanId),
+      },
+    });
+
+    const interestPayment = await this.prisma.loanInterestPayment.create({
+      data: {
+        amount: data.interestAmount,
+        loanId: Number(loanId),
+      },
+    });
+    // update the installment with the payment
+
+    if (!nextInstallment) {
+      throw new Error('No pending installments');
+    }
+
+    await this.prisma.loanInstallment.update({
+      where: {
+        id: nextInstallment.id,
+      },
+      data: {
+        paid: true,
+        payment: data.paymentAmount,
+        interest: data.interestAmount,
+      },
+    });
+
+    // update the loan status if all installments are paid
+    const allPaid = loan.loanInstallments.every(
+      (installment) => installment.paid,
+    );
+    if (allPaid) {
+      await this.prisma.loan.update({
+        where: {
+          id: Number(loanId),
+        },
+        data: {
+          status: 'PAID',
+        },
+      });
+    }
+
+    // if the amount is difernt to installment amount, create a new installments with the rest of the amount.
+
+    const remainingAmount =
+      data.paymentAmount - nextInstallment.payment - data.interestAmount;
+    let updatedInstallment: LoanInstallment | null = null;
+
+    if (remainingAmount > 0) {
+      updatedInstallment = await this.prisma.loanInstallment.create({
+        data: {
+          payment: remainingAmount,
+          interest: 0,
+          date: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+          loanId: Number(loanId),
+          paid: false,
+        },
+      });
+
+      return updatedInstallment;
+    }
+    return nextInstallment;
+  }
+
+  async getPaidInstallments() {
+    const paidInstallments = await this.prisma.loanInstallment.findMany({
+      where: {
+        paid: true,
+      },
+      include: {
+        loanPayments: true,
+        LoanInterestPayment: true,
+        loan: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    });
+
+    return paidInstallments.map((installment) => ({
+      ...installment,
+      user: installment.loan.user,
+    }));
   }
 }
