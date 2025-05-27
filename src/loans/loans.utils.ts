@@ -7,6 +7,7 @@ function calculateFixedInstallments(
   interestRate: number,
   startDate: Date,
   initialInstallments: number,
+  initialNumber: number = 0,
 ) {
   const installmentsArray: LoanInstallment[] = [];
   let remainingBalance = loanAmount;
@@ -19,7 +20,7 @@ function calculateFixedInstallments(
     date.setMonth(date.getMonth() + i);
     installmentsArray.push({
       id: undefined,
-      installment_number: i,
+      installment_number: i + initialNumber,
       payment: installmentAmount,
       interest,
       balance: remainingBalance,
@@ -40,6 +41,7 @@ function calculateVariableInstallments(
   interestRate: number,
   startDate: Date,
   initialInstallments: number,
+  initialNumber: number = 0,
 ) {
   const installmentsArray: LoanInstallment[] = [];
   let remainingBalance = loanAmount;
@@ -58,7 +60,7 @@ function calculateVariableInstallments(
       balance: remainingBalance,
       date,
       paid: false,
-      installment_number: i,
+      installment_number: i + initialNumber,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -73,6 +75,7 @@ function calculateRebateInstallments(
   interestRate: number,
   startDate: Date,
   initialInstallments: number,
+  initialNumber: number = 0,
 ) {
   const installmentsArray: LoanInstallment[] = [];
   let remainingBalance = loanAmount;
@@ -93,7 +96,7 @@ function calculateRebateInstallments(
       loanId,
       createdAt: new Date(),
       updatedAt: new Date(),
-      installment_number: i,
+      installment_number: i + initialNumber,
     });
   }
 
@@ -106,6 +109,7 @@ function calculateMaturityInstallments(
   interestRate: number,
   startDate: Date,
   initialInstallments: number,
+  initialNumber: number = 0,
 ) {
   const installmentsArray: LoanInstallment[] = [];
   const totalInstallments = initialInstallments;
@@ -123,7 +127,7 @@ function calculateMaturityInstallments(
         balance: 0,
         date,
         paid: false,
-        installment_number: i,
+        installment_number: i + initialNumber,
         loanId,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -139,7 +143,7 @@ function calculateMaturityInstallments(
         loanId,
         createdAt: new Date(),
         updatedAt: new Date(),
-        installment_number: i,
+        installment_number: i + initialNumber,
       });
     }
   }
@@ -154,6 +158,7 @@ export function calculateInstallments(
   interestRate: number,
   initialInstallments: number,
   startDate: Date,
+  initialNumber: number = 0,
 ) {
   if (loanType === LoanInterestTypes.FIXED) {
     return calculateFixedInstallments(
@@ -162,6 +167,7 @@ export function calculateInstallments(
       interestRate,
       startDate,
       initialInstallments,
+      initialNumber,
     );
   }
   if (loanType === LoanInterestTypes.VARIABLE) {
@@ -171,6 +177,7 @@ export function calculateInstallments(
       interestRate,
       startDate,
       initialInstallments,
+      initialNumber,
     );
   }
   if (loanType === LoanInterestTypes.REBATE) {
@@ -181,6 +188,7 @@ export function calculateInstallments(
       interestRate,
       startDate,
       initialInstallments,
+      initialNumber,
     );
   }
   if (loanType === LoanInterestTypes.MATURITY) {
@@ -190,6 +198,7 @@ export function calculateInstallments(
       interestRate,
       startDate,
       initialInstallments,
+      initialNumber,
     );
   }
 

@@ -244,10 +244,19 @@ export class LoanTransactionService {
   async payLoan(
     loanId: string,
     data: { paymentAmount: number; date: Date; interestAmount: number },
-  ): Promise<LoanInstallment> {
+  ): Promise<LoanInstallment & { user: User }> {
     //check if the loan exists - [x]
-    // x - Check if the amount is valida and not greater than the installment.
     // get the next unpaid installment
+
+    //checkear que sea el ultimo pago
+    // x - si es el ultimo. Check if the paymentAmount is valid and not greater than the installmentAmount.
+    // x - Check if the interestAmount is valid and not greater than the installmentInterestAmount.
+
+    // x - Check if the interestAmount is valid
+    // x checkear si los montos son iguales a los de la cuota.
+    // si los montos no son iguales, crear una nueva cuotas con el resto del monto.
+    // si los montos son iguales, y la cuota es la ultima, marcarla como pagada al prestamo.
+
     // save the payment
     // update the installment with the payment
     // update the loan status if all installments are paid
@@ -262,6 +271,7 @@ export class LoanTransactionService {
       },
       include: {
         loanInstallments: true,
+        loanType: true,
       },
     });
 
@@ -276,41 +286,164 @@ export class LoanTransactionService {
       (installment) => !installment.paid,
     );
 
-    // save the payment
-    const payment = await this.prisma.loanPayment.create({
-      data: {
-        amount: data.paymentAmount,
-        loanId: Number(loanId),
-      },
+    if (!nextInstallment) {
+      throw new Error('No pending installments');
+    }
+
+    //check if is the last payment (get the installment with the greatest date)
+    const lastInstallment = loan.loanInstallments.reduce((prev, current) => {
+      return prev.date > current.date ? prev : current;
     });
 
-    const interestPayment = await this.prisma.loanInterestPayment.create({
-      data: {
-        amount: data.interestAmount,
-        loanId: Number(loanId),
-      },
-    });
+    let isLastInstallment =
+      lastInstallment.installment_number === nextInstallment.installment_number;
+
+    // x - si es el ultimo. Check if the paymentAmount is valid and not greater than the installmentAmount.
+    if (data.paymentAmount > nextInstallment.payment && isLastInstallment) {
+      throw new Error(
+        'Payment amount is greater than in the last installment amount',
+      );
+    }
+    // x - Check if the interestAmount is valid and not greater than the installmentInterestAmount.
+
+    if (data.interestAmount > nextInstallment.interest) {
+      throw new Error('interest amount is greater than the installment amount');
+    }
+    // x - Check if the interestAmount is valid.
+    if (data.interestAmount < 0) {
+      throw new Error('Interest amount cannot be negative');
+    }
+
     // update the installment with the payment
 
     if (!nextInstallment) {
       throw new Error('No pending installments');
     }
 
+    console.log(nextInstallment);
     await this.prisma.loanInstallment.update({
       where: {
         id: nextInstallment.id,
       },
       data: {
         paid: true,
-        payment: data.paymentAmount,
-        interest: data.interestAmount,
+        payment: Number(data.paymentAmount),
+        balance: Number(nextInstallment.balance - data.paymentAmount),
+        interest: Number(data.interestAmount),
+      },
+    });
+
+    // adjust the installment amounts if they are different
+    if (
+      data.paymentAmount !== nextInstallment.payment ||
+      (data.interestAmount !== nextInstallment.interest && !isLastInstallment)
+    ) {
+      //actualizar, las nuevas cuotas with the new amount.
+      const balanceAmount =
+        nextInstallment.balance +
+        (nextInstallment.payment - data.paymentAmount);
+
+      if (balanceAmount < 0) {
+        throw new Error('Balance amount cannot be negative');
+      }
+
+      if (balanceAmount === 0) {
+        // If the balance is zero, we can mark the installment as paid
+        await this.prisma.loanInstallment.update({
+          where: {
+            id: nextInstallment.id,
+          },
+          data: {
+            paid: true,
+          },
+        });
+
+        //delete the installlments
+        await this.prisma.loanInstallment.deleteMany({
+          where: {
+            paid: false,
+            id: {
+              not: nextInstallment.id,
+            },
+            loanId: Number(loanId),
+          },
+        });
+
+        await this.prisma.loan.update({
+          where: {
+            id: Number(loanId),
+          },
+          data: {
+            status: 'PAID',
+          },
+        });
+        // Return the installment with the updated data
+        const paidInstallment = await this.prisma.loanInstallment.findUnique({
+          where: {
+            id: nextInstallment.id,
+          },
+          include: {
+            loanPayments: true,
+            LoanInterestPayment: true,
+            loan: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        });
+        return {
+          ...paidInstallment,
+          user: paidInstallment.loan.user,
+        };
+      }
+      //count the number of not paid installments
+      const notPaidInstallmentsCount = loan.loanInstallments.filter(
+        (installment) => !installment.paid,
+      ).length;
+      //delete all installments.
+      await this.prisma.loanInstallment.deleteMany({
+        where: {
+          paid: false,
+          loanId: Number(loanId),
+        },
+      });
+      // create new installments with the new amounts.
+      let installments = calculateInstallments(
+        loan.loanType.name as keyof typeof LoanInterestTypes,
+        loan.id,
+        balanceAmount,
+        loan.interestRate,
+        notPaidInstallmentsCount - 1,
+        nextInstallment.date,
+        nextInstallment.installment_number + 1, // Increment the installment number for the new installments
+      );
+
+      await this.prisma.loanInstallment.createMany({
+        data: installments,
+      });
+    }
+
+    // save the payment
+    await this.prisma.loanPayment.create({
+      data: {
+        amount: data.paymentAmount,
+        loanId: Number(loanId),
+      },
+    });
+    //save the interest payment
+    await this.prisma.loanInterestPayment.create({
+      data: {
+        amount: data.interestAmount,
+        loanId: Number(loanId),
       },
     });
 
     // update the loan status if all installments are paid
-    const allPaid = loan.loanInstallments.every(
-      (installment) => installment.paid,
-    );
+    const allPaid =
+      nextInstallment.payment == data.paymentAmount &&
+      nextInstallment.interest == data.interestAmount &&
+      isLastInstallment;
     if (allPaid) {
       await this.prisma.loan.update({
         where: {
@@ -322,26 +455,25 @@ export class LoanTransactionService {
       });
     }
 
-    // if the amount is difernt to installment amount, create a new installments with the rest of the amount.
-
-    const remainingAmount =
-      data.paymentAmount - nextInstallment.payment - data.interestAmount;
-    let updatedInstallment: LoanInstallment | null = null;
-
-    if (remainingAmount > 0) {
-      updatedInstallment = await this.prisma.loanInstallment.create({
-        data: {
-          payment: remainingAmount,
-          interest: 0,
-          date: new Date(new Date().setMonth(new Date().getMonth() + 1)),
-          loanId: Number(loanId),
-          paid: false,
+    //return the paid installment
+    const paidInstallment = await this.prisma.loanInstallment.findUnique({
+      where: {
+        id: nextInstallment.id,
+      },
+      include: {
+        loanPayments: true,
+        LoanInterestPayment: true,
+        loan: {
+          include: {
+            user: true,
+          },
         },
-      });
-
-      return updatedInstallment;
-    }
-    return nextInstallment;
+      },
+    });
+    return {
+      ...paidInstallment,
+      user: paidInstallment.loan.user,
+    };
   }
 
   async getPaidInstallments() {
