@@ -15,6 +15,6 @@ export class UploadController {
   @Post('image')
   @UseInterceptors(FileInterceptor('file')) // 'file' is the field name in the form-data
   async uploadImage(@UploadedFile() file: Express.Multer.File) {
-    return this.fileUploadService.handleFileUpload(file);
+    return this.fileUploadService.postToCloudinary(file);
   }
 }
