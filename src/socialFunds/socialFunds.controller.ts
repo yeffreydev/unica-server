@@ -8,8 +8,7 @@ export class SocialFundsController {
 
   @Post('create-transaction')
   async createTransaction(@Body() data: SocialFundsTransactions) {
-    this.socialFundsService.createSocialFundsTransaction(data);
-    return { message: 'Transaction created successfully' };
+    return this.socialFundsService.createSocialFundsTransaction(data);
   }
 
   @Get('transactions')

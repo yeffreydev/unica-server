@@ -20,6 +20,16 @@ export class AuthController {
   ) {
     return this.authService.register(userData);
   }
+
+  /**
+   * Endpoint for user login.
+   * Uses LocalAuthGuard to validate user credentials.
+   * @param req - The request object containing user credentials.
+   * @param req.body.username - The username of the user.
+   * @param req.body.password - The password of the user.
+   * @returns Access token and refresh token on successful login.
+   * @throws UnauthorizedException if credentials are invalid.
+   */
   @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(@Request() req) {

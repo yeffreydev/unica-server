@@ -39,6 +39,9 @@ export class IncomesService {
         amount: Number(data.amount),
         date: data.date,
       },
+      include: {
+        user: true,
+      },
     });
   }
 }

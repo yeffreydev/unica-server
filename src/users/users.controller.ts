@@ -21,6 +21,12 @@ import { RolesGuard } from 'src/app/auth/roles.guard';
 export class UserController {
   constructor(private readonly UserService: UserService) {}
 
+  /**
+   * Endpoint to get all users.
+   * @param req - The request object.
+   * @returns List of all users.
+   * @throws UnauthorizedException if the user is not authorized.
+   */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin)
   @Get()
@@ -28,13 +34,34 @@ export class UserController {
     return this.UserService.getAll();
   }
 
-  // @UseGuards(JwtAuthGuard)
-  // @Roles(Role.Admin)
+  /**
+   * Endpoint for user login.
+   * Uses LocalAuthGuard to validate user credentials.
+   * @param req - The request object containing user credentials.
+   * @param req.body.name - The name of the user.
+   * @param req.body.lastname - The lastname of the user.
+   * @param req.body.dni - The Nacional ID of the user.
+   * @param req.body.password - The password of the user.
+   * @param req.body.email? - optional email of the user.
+   * @param req.body.phone? - optional phone number of the user.
+   * @returns Access token and refresh token on successful login.
+   * @throws UnauthorizedException if credentials are invalid.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Roles(Role.Admin)
   @Post()
   async createUser(@Body() data: User) {
     console.log(data);
     return this.UserService.createUser(data);
   }
+
+  /**
+   * Endpoint to get a user by ID.
+   * @param id - The ID of the user to retrieve.
+   * @returns User data if found.
+   * @throws NotFoundException if the user does not exist.
+   */
+
   @UseGuards(JwtAuthGuard)
   @Roles(Role.Admin)
   @Get(':id')
@@ -43,6 +70,14 @@ export class UserController {
     if (!UserFound) throw new NotFoundException('User does not exist');
     return UserFound;
   }
+
+  /**
+   * Endpoint to delete a user by ID.
+   * @param id - The ID of the user to delete.
+   * @returns Confirmation message on successful deletion.
+   * @throws NotFoundException if the user does not exist.
+   */
+  @Roles(Role.Admin)
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async deleteUser(@Param('id') id: string) {
@@ -52,6 +87,14 @@ export class UserController {
       throw new NotFoundException('User does not exist');
     }
   }
+
+  /**
+   * Endpoint to update a user by ID.
+   * @param id - The ID of the user to update.
+   * @param data - The user data to update.
+   * @returns Updated user data on successful update.
+   * @throws NotFoundException if the user does not exist.
+   * */
   @UseGuards(JwtAuthGuard)
   @Roles(Role.Admin)
   @Put(':id')

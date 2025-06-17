@@ -8,8 +8,7 @@ export class IncomesController {
 
   @Post('create-other-income')
   async createOtherIncome(@Body() data: Incomes) {
-    this.socialFundsService.createOtherIncome(data);
-    return { message: 'Transaction created successfully' };
+    return this.socialFundsService.createOtherIncome(data);
   }
 
   @Get('others')
